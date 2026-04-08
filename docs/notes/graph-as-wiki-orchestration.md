@@ -58,6 +58,13 @@ Every node crossing is a discrete event with the memo state at that point. Traci
 
 ## Influences
 
+### Theoretical
+- **Nash** — game theory, equilibrium in multi-agent strategic interaction. Agents in the graph are players with strategies; the system should reason about stable outcomes.
+- **Hobbes** — social contract theory. Agents operate under agreed-upon contracts (memo schemas, role boundaries). The harness is the sovereign that enforces the contract.
+- **Montesquieu** — separation of powers. Agent roles are deliberately divided and checked against each other. No single node accumulates unchecked authority over the workflow.
+- **Hurwicz** — mechanism design. The graph structure itself is a mechanism — design the rules and incentives so that agents acting within their roles produce the desired system-level outcome.
+
+### Technical
 - **LangGraph** — stateful graph-based agent orchestration with cycles, shared state, checkpointing.
 - **Basic Memory** — local-first markdown knowledge graph, entity-observation-relation model, MCP integration.
 - **Anthropic skills** — markdown + YAML frontmatter as a pattern for defining agent capabilities.
