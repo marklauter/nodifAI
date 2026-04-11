@@ -86,16 +86,27 @@ A sequential edge pointing backward would be an infinite loop — either a graph
 
 ## Failure
 
-Open question. Options:
-- **Halt** — stop the graph. The operator sees where it broke.
-- **Retry** — the engine retries the failed node (with a limit).
-- **Fallback edge** — the node has an error edge that routes to a recovery path.
-- **Bubble up** — failure memo propagates downstream so other nodes can react.
+Every node returns a memo. Failure is a value, not an exception. A node doesn't throw — it returns a memo with a result context. The engine doesn't need try/catch, retry logic, or special failure modes. It just pushes memos and follows edges.
+
+Two distinct levels of "failure":
+
+1. **Node result** — the node ran successfully but reports a problem in the work product. "I ran the build and it failed." The node worked; the code is broken.
+2. **Node failure** — the node itself couldn't complete. "I couldn't run the build — tool crashed, disk full, credentials expired."
+
+Both are values in the memo. Both route via edges. The graph author handles them with the edge taxonomy:
+
+```
+checks -> developer : when result == "fail"    # work product broken, cycle back
+      || eval-team : when result == "pass"      # work product good, proceed
+      || operator : when result == "error"       # node itself broke, escalate to human
+```
+
+An unhandled result (no edge matches) is a gate that didn't open — a halt.
 
 ## State
 
 The engine itself is stateless. All state travels in the memo. The engine's only job is to route memos along edges, activate nodes, and enforce the graph topology. Harness-held invariants (checkpoints, snapshots) live outside the graph — they are not memo state, they are enforcement infrastructure.
 
-## Open Questions
+## Resolved
 
-- If fan-out branches can terminate independently, can the graph have multiple terminal nodes? Or is the "final node" specifically the main flow's terminal while branches just end?
+- Multiple terminal nodes are allowed. Fan-out branches can terminate independently.
