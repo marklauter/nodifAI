@@ -69,7 +69,7 @@ planner -> developer : when approved
 # Ternary — one condition, second target is implicit else
 foreman -> planner : when findings > 0 || complete
 
-# Case — multi-way branch, one fires
+# Switch — multi-way branch, one fires
 classifier -> bug-fix : when type == "bug" 
            || feature : when type == "feature" 
            || refactor : when type == "refactor"

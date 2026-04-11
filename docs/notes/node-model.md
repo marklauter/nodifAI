@@ -52,11 +52,6 @@ Conditional branching based on memo field values. No LLM, no code execution — 
 - **Input:** memo to inspect
 - **Output:** same memo, routed to the matching edge
 
-## Activation Strategy
+## Fan-out and Fan-in
 
-Fan-out and fan-in are not node types — they are properties of graph topology (multiple outbound or inbound edges). Any node with multiple inbound edges declares its activation strategy:
-
-- **`activate: each`** — fire on every inbound memo arrival. Node manages its own accumulation. (Message bus pattern.)
-- **`activate: all`** — wait for all inbound memos, fire once with the collection as input. (Task.WaitAll pattern.)
-
-Nodes with a single inbound edge don't need to declare this — there's only one memo to receive.
+Fan-out and fan-in are not node types — they are properties of graph topology (multiple outbound or inbound edges). See runtime-semantics.md for activation strategy (open question: where this is declared).

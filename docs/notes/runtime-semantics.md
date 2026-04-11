@@ -27,7 +27,7 @@ Four edge types:
 | **Sequential** | 1 | none |
 | **Gate** | 1 | 1 |
 | **Ternary** | 2 | 1 (+ implicit else) |
-| **Case** | 2+ | 1 per target |
+| **Switch** | 2+ | 1 per target |
 
 ```
 # Sequential
@@ -39,13 +39,13 @@ planner -> developer : when approved
 # Ternary — one condition, two targets, second is implicit else
 foreman -> planner : when findings > 0 || complete
 
-# Case — multi-way branch, one target fires
+# Switch — multi-way branch, one target fires
 classifier -> bug-fix : when type == "bug" 
            || feature : when type == "feature" 
            || refactor : when type == "refactor"
 ```
 
-**Fan-out is not an edge type.** Fan-out is a property of a node having multiple outbound edges. Each edge in the collection is independently typed — sequential, gate, ternary, or case.
+**Fan-out is not an edge type.** Fan-out is a property of a node having multiple outbound edges. Each edge in the collection is independently typed — sequential, gate, ternary, or switch.
 
 ```
 # Fan-out: three sequential edges from one node
@@ -80,7 +80,9 @@ Two activation strategies are needed:
 
 ## Cycles
 
-A back-edge returns flow to a previously visited node. The edge or the target node declares the termination condition. The engine enforces a maximum cycle count as a safety bound.
+Cycles are emergent, not a built-in concept. A cycle is just an edge whose target is upstream in the graph. It uses the same edge taxonomy — a ternary or switch edge pointing backward will naturally terminate when the guard routes to the non-looping target. The engine just follows edges; it doesn't need to know it's in a cycle.
+
+A sequential edge pointing backward would be an infinite loop — either a graph design bug or requires an external kill (max iterations, timeout).
 
 ## Failure
 
