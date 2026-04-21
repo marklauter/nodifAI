@@ -1,4 +1,4 @@
-# Graph Format
+# Graph format
 
 How the graph topology is represented on disk.
 
@@ -10,7 +10,7 @@ How the graph topology is represented on disk.
 - Supports edges with conditions, labels, and properties.
 - Supports fan-out, fan-in, cycles (back-edges), and conditional branching.
 
-## Options Under Consideration
+## Options under consideration
 
 ### Option A: YAML frontmatter in node files
 
@@ -31,9 +31,9 @@ fan: out
 
 The graph is the sum of all node files. Topology is distributed — you reconstruct it by reading every node.
 
-**Tradeoff:** Easy to edit one node at a time. Hard to see the full graph at a glance.
+Tradeoff: easy to edit one node at a time. Hard to see the full graph at a glance.
 
-### Option B: Standalone graph file
+### Option B: standalone graph file
 
 A single file (e.g., `graph.md`) encodes the full topology. Nodes reference their detail files.
 
@@ -47,15 +47,15 @@ foreman -> planner [condition: findings]
 foreman -> done [condition: pass]
 ```
 
-**Tradeoff:** Full graph visible at a glance. Node detail lives elsewhere — two places to maintain.
+Tradeoff: full graph visible at a glance. Node detail lives elsewhere — two places to maintain.
 
-### Option C: Hybrid
+### Option C: hybrid
 
-Topology in a graph file. Node content (system prompts, schemas, config) in individual node files. The graph file is the map; node files are the territory.
+Topology in a graph file. Node content (system prompts, schemas, and config) in individual node files. The graph file is the map; node files are the territory.
 
-**Tradeoff:** Best of both — but the link between graph file and node files must be kept in sync.
+Tradeoff: best of both — but the link between graph file and node files must be kept in sync.
 
-## Edge Syntax
+## Edge syntax
 
 Edges are control structures. Five named types:
 
@@ -82,8 +82,8 @@ developer -> eval-coverage
 
 Guards are simple predicates on memo fields (`when` clauses). Complex conditions requiring code or LLM judgment live in upstream nodes, not on edges.
 
-## Open Questions
+## Open questions
 
-- Which notation for the graph file? Tables, DSL in a fenced block, indented outline, something else?
+- Which notation for the graph file? Tables, DSL in a fenced block, indented outline, or something else?
 - Does the graph file reference node files by path, by name, or by convention (e.g., `nodes/{name}.md`)?
-- Default edge behavior when no guard matches — halt? error edge? implicit fallthrough?
+- Default edge behavior when no guard matches — halt, error edge, or implicit fallthrough?

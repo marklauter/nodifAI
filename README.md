@@ -1,2 +1,2 @@
-# nodify
-graph based agent harness
+# nodifAI
+graph-based agent harness
