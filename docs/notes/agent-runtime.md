@@ -24,14 +24,14 @@ Claude Code's agent loop and tool infrastructure as a library. Built-in Read/Wri
 
 ### Claude Code CLI via subprocess
 
-Orchestrate `claude -p "prompt"` invocations from the harness, one per agent node. Inherits every capability Claude Code ships — tools, skills, hooks, MCP, and permissions.
+Orchestrate `claude -p "prompt"` invocations from the harness, one per agent node. `--bare` is the scripted-invocation mode: it skips auto-discovery of hooks, skills, plugins, MCP servers, auto memory, and CLAUDE.md, so context is whatever the harness injects explicitly.
 
-- Upside: zero runtime to build.
-- Downside: subprocess overhead per node, less control over context and caching, and Claude Code's general-purpose system prompt comes along whether you want it or not.
+- Upside: zero runtime to build. Tool loop, permission system, and sandboxing come for free.
+- Downside: subprocess overhead per node, and the server-side prompt cache is keyed on byte-identical prefixes with a five-minute sliding TTL — across short-lived invocations with drifting prefixes, hit rates fall off.
 
 ## Tradeoffs
 
-Cost per execution, low to high: Agent SDK, Client SDK with heavy prompt caching, Claude Code CLI.
+Cost per execution, low to high: Agent SDK, Client SDK with heavy prompt caching, Claude Code CLI. The Agent SDK wins because it exposes `cache_control` breakpoints as a first-class knob: a shared constitutional preamble stays cached across every plan, developer, and review invocation. CLI caching is per-session and opaque, so fan-out across short-lived role processes mostly misses.
 
 Build effort, low to high: Claude Code CLI, Agent SDK, Client SDK.
 
@@ -42,6 +42,8 @@ Tool surface: CLI and Agent SDK share the full palette. Client SDK gives you not
 ## Chosen path
 
 Build the agent-node runtime on the Agent SDK, in Python. The graph-orchestration layer (node dispatch, memo routing, and topology) lives in nodifAI proper; the Agent SDK handles the inside of each agent node.
+
+Two constraints drive the pick. First, Anthropic's February 2026 clarification requires API-key authentication for Agent SDK and unattended agentic workloads; nodifAI's multi-hour runs would hit the subscription's rolling rate cap mid-cycle and corrupt a run, so metered API is the only predictable billing model regardless of runtime. Second, a graph with a shared constitutional preamble across plan, developer, and review nodes pays that preamble's tokens on every node call; explicit `cache_control` breakpoints, which the Agent SDK exposes and the CLI does not, let the preamble stay cached across roles within the sliding TTL.
 
 Mechanism and judgment nodes use whichever runtime is lightest. A mechanism node runs deterministic code with no LLM — no SDK needed. A judgment node can use the Client SDK directly for a single structured call without tools.
 
@@ -61,4 +63,10 @@ The Claude Code CLI subprocess option is language-agnostic — any language that
 ## Open questions
 
 - Whether mechanism and judgment nodes justify a separate runtime, or share the Agent SDK process to amortize startup.
-- Whether prompt caching warrants a fixed per-node system prompt that Anthropic can cache across invocations, or allows node-local context to dominate.
+- How to layer `cache_control` breakpoints — shared constitution, per-role charter, per-node tool schema — to maximize hit rate without starving node-local context of cache budget.
+
+## References
+
+- [Agent SDK overview](https://docs.anthropic.com/en/docs/claude-code/sdk) and [Building agents with the Claude Agent SDK](https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk) — Agent SDK requires API-key authentication; the CLI-for-dev, SDK-for-production pattern.
+- [Best practices for Claude Code](https://www.anthropic.com/engineering/claude-code-best-practices) — `--bare` skips hooks, LSP, plugin sync, skill directory walks, and auto-memory, and requires `ANTHROPIC_API_KEY` or an `apiKeyHelper`.
+- [Prompt caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching) and [Pricing](https://docs.anthropic.com/en/docs/about-claude/pricing) — `cache_control: {type: "ephemeral"}` with `ttl` of `5m` (default) or `1h` (beta); writes bill at 1.25× base input, reads at 0.1× base input; TTL refreshes on each hit.
