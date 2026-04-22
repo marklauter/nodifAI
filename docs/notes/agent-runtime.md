@@ -26,7 +26,7 @@ Claude Code's agent loop and tool infrastructure as a library. Built-in Read/Wri
 
 Orchestrate `claude -p "prompt"` invocations from the harness, one per agent node. `--bare` is the scripted-invocation mode: it skips auto-discovery of hooks, skills, plugins, MCP servers, auto memory, and CLAUDE.md, so context is whatever the harness injects explicitly.
 
-- Upside: zero runtime to build. Tool loop, permission system, and sandboxing come for free.
+- Upside: zero runtime to build, and each node gets OS-process isolation for free — crash containment, memory isolation, and any container or seccomp wrapper the harness wants to apply.
 - Downside: subprocess overhead per node, and the server-side prompt cache is keyed on byte-identical prefixes with a five-minute sliding TTL — across short-lived invocations with drifting prefixes, hit rates fall off.
 
 ## Tradeoffs
@@ -63,7 +63,7 @@ The Claude Code CLI subprocess option is language-agnostic — any language that
 ## Open questions
 
 - Whether mechanism and judgment nodes justify a separate runtime, or share the Agent SDK process to amortize startup.
-- How to layer `cache_control` breakpoints — shared constitution, per-role charter, per-node tool schema — to maximize hit rate without starving node-local context of cache budget.
+- How to layer `cache_control` breakpoints — shared constitution, per-role charter, per-node tool schema — to maximize hit rate without starving node-local context of cache budget. Constraints: up to four breakpoints per request, a roughly twenty-block prefix lookback from each breakpoint, a minimum cacheable-prefix size (1024 tokens on Sonnet and Opus, 2048 on Haiku), and a five-minute sliding TTL by default with a one-hour beta tier at higher write cost. No documented cap on the number of distinct cached prefixes an organization can hold warm, so each role's constitution can coexist as its own cache entry — the question is which ones fire often enough inside the TTL to pay back their 1.25× write cost.
 
 ## References
 
